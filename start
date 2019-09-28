@@ -139,7 +139,7 @@ Alias /Hercules /usr/share/phpmyadmin
 sudo a2enmod rewrite
 
 #armazenar as credenciais ao invés de ficar pedindo toda vez
-git config credential.helper store
+sudo git config credential.helper store
 
 echo '
 #Config A
