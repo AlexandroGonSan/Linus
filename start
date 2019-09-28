@@ -13,7 +13,9 @@
 #O banco de dados de 'development' deve ser o dev
 
 apt install sudo
+pause
 sudo apt update
+pause
 sudo apt install apache2
 sudo apt install php
 sudo apt install wget
@@ -41,7 +43,7 @@ composer global require "laravel/installer"
 
 sudo cp -r .config/composer/vendor/ /usr/bin/vendor/
 
-sudo mv /usr/bin/vendor/bin/laravel /usr/bin/laravel
+sudo cp /usr/bin/vendor/bin/laravel /usr/bin/laravel
 
 sudo wget http://repo.mysql.com/mysql-apt-config_0.8.13-1_all.deb
 
@@ -150,7 +152,7 @@ echo '
 
 sudo /etc/init.d/apache2 restart
 
-sudo cd /var/www/html/
+cd /var/www/html/
 
 sudo laravel new blog
 
