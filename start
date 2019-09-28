@@ -1,0 +1,152 @@
+#!/bin/bash
+
+#Pesquise pelas expressions abaixo e configure corretamente .
+#...Observe que uma mesma expression pode aparecer diversas vezes durante o codigo .
+##MYSQL_PASSWORD
+###Para configurar a senha do mysql
+##REPOSITORY
+##VERSION
+
+#Aplique 'chmod 755' a esse arquivo antes de tentar executa-lo
+
+#O banco de dados de 'production' deve ser o public
+#O banco de dados de 'development' deve ser o dev
+
+apt install sudo
+sudo apt update
+sudo apt install apache2
+sudo apt install php
+sudo apt install wget
+sudo apt install git
+
+
+sudo apt install php-mysqli php-mbstring php-xml php-zip
+
+#laravel
+
+sudo echo '
+;Configs ProXWeb
+extension=mbstring
+extension=openssl
+extension=pdo_mysql
+' >> /etc/php/7.3/apache2/php.ini
+
+sudo php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+
+sudo php composer-setup.php
+
+sudo mv composer.phar /usr/local/bin/composer
+
+composer global require "laravel/installer"
+
+sudo cp -r .config/composer/vendor/ /usr/bin/vendor/
+
+sudo mv /usr/bin/vendor/bin/laravel /usr/bin/laravel
+
+sudo wget http://repo.mysql.com/mysql-apt-config_0.8.13-1_all.deb
+
+sudo apt install ./mysql-apt-config_0.8.13-1_all.deb
+
+sudo apt update
+
+#esse install tem que ser obrigatoriamente após os passos anteriores
+sudo apt install mysql-server
+
+sudo mysql_secure_installation
+
+#phpmyadmin
+sudo wget https://files.phpmyadmin.net/phpMyAdmin/4.9.0.1/phpMyAdmin-4.9.0.1-all-languages.tar.gz
+
+sudo tar xvf phpMyAdmin-4.9.0.1-all-languages.tar.gz
+
+sudo mv phpMyAdmin-4.9.0.1-all-languages /usr/share/phpmyadmin
+
+//temp foler dedicated
+sudo mkdir -p /var/lib/phpmyadmin/tmp
+
+//cache?
+sudo chown -R www-data:www-data /var/lib/phpmyadmin
+
+sudo mkdir /etc/phpmyadmin/
+
+sudo cp /usr/share/phpmyadmin/config.sample.inc.php  /usr/share/phpmyadmin/config.inc.php
+
+sudo echo '
+/*Configs ProXWeb*/
+$cfg['blowfish_secret'] = 'root';
+$cfg['TempDir'] = '/var/lib/phpmyadmin/tmp';
+' >> /usr/share/phpmyadmin/config.inc.php
+
+sudo echo '
+Alias /Hercules /usr/share/phpmyadmin
+
+<Directory /usr/share/phpmyadmin>
+    Options SymLinksIfOwnerMatch
+    DirectoryIndex index.php
+
+    <IfModule mod_php5.c>
+        <IfModule mod_mime.c>
+            AddType application/x-httpd-php .php
+        </IfModule>
+        <FilesMatch ".+\.php$">
+            SetHandler application/x-httpd-php
+        </FilesMatch>
+
+        php_value include_path .
+        php_admin_value upload_tmp_dir /var/lib/phpmyadmin/tmp
+        php_admin_value open_basedir /usr/share/phpmyadmin/:/etc/phpmyadmin/:/var/lib/phpmyadmin/:/usr/share/php/php-gettext/:/usr/share/php/php-php-gettext/:/usr/share/javascript/:/usr/share/php/tcpdf/:/usr/share/doc/phpmyadmin/:/usr/share/php/phpseclib/
+        php_admin_value mbstring.func_overload 0
+    </IfModule>
+    <IfModule mod_php.c>
+        <IfModule mod_mime.c>
+            AddType application/x-httpd-php .php
+        </IfModule>
+        <FilesMatch ".+\.php$">
+            SetHandler application/x-httpd-php
+        </FilesMatch>
+
+        php_value include_path .
+        php_admin_value upload_tmp_dir /var/lib/phpmyadmin/tmp
+        php_admin_value open_basedir /usr/share/phpmyadmin/:/etc/phpmyadmin/:/var/lib/phpmyadmin/:/usr/share/php/php-gettext/:/usr/share/php/php-php-gettext/:/usr/share/javascript/:/usr/share/php/tcpdf/:/usr/share/doc/phpmyadmin/:/usr/share/php/phpseclib/
+        php_admin_value mbstring.func_overload 0
+    </IfModule>
+
+</Directory>
+
+<Directory /usr/share/phpmyadmin/setup>
+    <IfModule mod_authz_core.c>
+        <IfModule mod_authn_file.c>
+            AuthType Basic
+            AuthName "phpMyAdmin Setup"
+            AuthUserFile /etc/phpmyadmin/htpasswd.setup
+        </IfModule>
+        Require valid-user
+    </IfModule>
+</Directory>
+
+
+<Directory /usr/share/phpmyadmin/templates>
+    Require all denied
+</Directory>
+<Directory /usr/share/phpmyadmin/libraries>
+    Require all denied
+</Directory>
+<Directory /usr/share/phpmyadmin/setup/lib>
+    Require all denied
+</Directory>
+' >> /etc/apache2/conf-enabled/phpmyadmin.conf
+
+sudo a2enmod rewrite
+
+#armazenar as credenciais ao invés de ficar pedindo toda vez
+git config credential.helper store
+
+echo '
+#Config A
+<Directory "/var/www/html/">
+	Allowoverride All
+</Directory>
+' >> /etc/apache2/apache2.conf
+
+sudo /etc/init.d/apache2 restart
+
