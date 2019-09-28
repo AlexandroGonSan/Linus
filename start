@@ -150,3 +150,8 @@ echo '
 
 sudo /etc/init.d/apache2 restart
 
+sudo cd /var/www/html/
+
+sudo laravel new blog
+
+sudo nano '<?php header("Location: blog/public"); ?>' >> index.php
