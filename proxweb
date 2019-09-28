@@ -1,0 +1,149 @@
+#!/bin/bash
+
+#Pesquise pelas expressions abaixo e configure corretamente .
+#...Observe que uma mesma expression pode aparecer diversas vezes durante o codigo .
+##MYSQL_PASSWORD
+###Para configurar a senha do mysql
+##REPOSITORY
+##VERSION
+
+#Aplique 'chmod 755' a esse arquivo antes de tentar executa-lo
+
+#O banco de dados de 'production' deve ser o public
+#O banco de dados de 'development' deve ser o dev
+
+sudo git clone REPOSITORY /var/www/html/VERSION/
+
+sudo mv /var/www/html/index.html /var/www/html/2index.html
+
+echo '
+<?php
+
+	header("Location: app");
+	
+ ?>
+' >> /var/www/html/index.php
+
+echo '
+APP_NAME=ProXWeb
+APP_ENV=local
+APP_KEY=base64:b0HSwsIOyD5wXKC3XKVUSKCEosz61Gf6pHQMyXBNT2Q=
+APP_DEBUG=false
+APP_LOG_LEVEL=debug
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=public
+DB_USERNAME=root
+DB_PASSWORD=root
+
+BROADCAST_DRIVER=log
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+QUEUE_DRIVER=sync
+
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_DRIVER=smtp
+MAIL_HOST=
+MAIL_PORT=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=null
+
+PUSHER_APP_ID=
+PUSHER_APP_KEY=
+PUSHER_APP_SECRET=
+PUSHER_APP_CLUSTER=mt1
+' >> /var/www/html/VERSION/.env
+
+sudo chmod -R 777 /var/www/html/VERSION/storage
+
+sudo chmod -R 777 /var/www/html/VERSION/bootstrap/cache
+
+#PROVAVELMENTE NÃO PRECISA EXECUTAR
+#chown -R www-data.www-data /var/www/html/VERSION
+
+#COMMENT DA PRIMEIRA IMPLEMENTACION
+#CONTINUAR A PARTIR DAQUI
+
+echo '
+
+
+<Directory "/var/www/html/">
+	Allowoverride All
+</Directory>
+' >> /etc/apache2/apache2.conf
+
+php /var/www/html/VERSION/artisan config:cache
+
+php /var/www/html/VERSION/artisan route:cache
+
+sudo git clone REPOSITORY /var/www/html/development/
+
+echo '
+APP_NAME=ProXWeb
+APP_ENV=local
+APP_KEY=base64:b0HSwsIOyD5wXKC3XKVUSKCEosz61Gf6pHQMyXBNT2Q=
+APP_DEBUG=true
+APP_LOG_LEVEL=debug
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=dev
+DB_USERNAME=root
+DB_PASSWORD=root
+
+BROADCAST_DRIVER=log
+CACHE_DRIVER=file
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+QUEUE_DRIVER=sync
+
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_DRIVER=smtp
+MAIL_HOST=
+MAIL_PORT=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=null
+
+PUSHER_APP_ID=
+PUSHER_APP_KEY=
+PUSHER_APP_SECRET=
+PUSHER_APP_CLUSTER=mt1
+' >> /var/www/html/development/.env
+
+sudo chmod -R 777 /var/www/html/development/storage
+
+sudo chmod -R 777 /var/www/html/development/bootstrap/cache
+
+#PROVAVELMENTE NÃO PRECISA EXECUTAR
+#chown -R www-data.www-data /var/www/html/development
+
+#ESTAH COM ERRO NESSE PASSO POR ISSO SERA FEITO POR LINKS E NOT POR ALIASES
+#echo '
+#Alias /app /var/www/html/v1.0/public
+#' > /etc/apache2/conf-enabled/app.conf
+
+#echo '
+#Alias /dev /var/www/html/development/public
+#' > /etc/apache2/conf-enabled/dev.conf
+
+ln -s /var/www/html/VERSION/public /var/www/html/app
+
+ln -s /var/www/html/development/public /var/www/html/dev
+
+sudo /etc/init.d/apache2 restart
+
+#[configure your web server's document / web root to be the public directory LARAVEL]->Bing
